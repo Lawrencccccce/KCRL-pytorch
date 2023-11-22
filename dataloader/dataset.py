@@ -1,4 +1,4 @@
-import torch
+
 import numpy as np
 from torch.utils.data import Dataset
 from datetime import datetime
@@ -7,12 +7,11 @@ from helpers.dir_utils import create_dir
 
 
 
-
-
 class CustomDataset(Dataset):
     def __init__(self, input_path, transform=None, solution_path = None, normalize_flag=False, transpose_flag=False):
-        self.data = np.load(input_path)
+        self.data = np.load(input_path).astype(int)
         self.transform = transform
+        self.datasize, self.d = self.data.shape
 
         data_dir = 'dataset/{}'.format(datetime.now(timezone('Australia/Sydney')).strftime('%Y-%m-%d_%H-%M-%S-%f')[:-3])
         create_dir(data_dir)
