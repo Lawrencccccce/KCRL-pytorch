@@ -13,8 +13,8 @@ class CustomDataset(Dataset):
         self.transform = transform
         self.datasize, self.d = self.data.shape
 
-        data_dir = 'dataset/{}'.format(datetime.now(timezone('Australia/Sydney')).strftime('%Y-%m-%d_%H-%M-%S-%f')[:-3])
-        create_dir(data_dir)
+        # data_dir = 'dataset/{}'.format(datetime.now(timezone('Australia/Sydney')).strftime('%Y-%m-%d_%H-%M-%S-%f')[:-3])
+        # create_dir(data_dir)
 
 
         if solution_path is None:
@@ -35,3 +35,9 @@ class CustomDataset(Dataset):
             sample = self.transform(sample)
 
         return sample
+    
+    def get_number_of_nodes(self):
+        return self.d
+    
+    def get_datasize(self):
+        return self.datasize
