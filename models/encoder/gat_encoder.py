@@ -43,4 +43,12 @@ class GATEncoder(nn.Module):
         self.is_training = is_train
 
     def encode(self, inputs):
-        pass  # The actual encoding logic will go here
+        x = inputs
+        for _ in range(self.num_stacks):
+            heads = []
+            for _ in range(self.num_heads):
+                head = attn_head(x, self.hidden_dim, activation=F.elu, in_drop=0.0, coef_drop=0.0, residual=self.residual)
+                heads.append(head)
+            x = torch.cat(heads, dim=-1)
+        logits = nn.Linear(self.hidden_dim * self.num_heads, self.input_dimension)(x)
+        return logits
