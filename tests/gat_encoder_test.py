@@ -5,10 +5,14 @@ from models.encoder import GATEncoder
 from helpers.config import get_config
 
 config, _ = get_config()
-config.batch_size = 16
-config.max_length = 8
-config.input_dimension = 64
+config.batch_size = 10
+config.max_length = 5
+config.input_dimension = 32
+config.num_stacks = 1
+config.num_heads = 1
+config.hidden_dim = 20
 
 gat_encoder = GATEncoder(config, True)
 input_ = torch.zeros((config.batch_size, config.max_length, config.input_dimension))
 output = gat_encoder.encode(input_)
+print(output)

@@ -3,20 +3,30 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 def attn_head(seq, out_sz, activation, in_drop=0.0, coef_drop=0.0, residual=False):
+    '''
+    input shape: (batch_size, max_length, input_dimension)
+    output shape: (batch_size, max_length, out_sz)
+    '''
     if in_drop != 0.0:
-        seq = F.dropout(seq, in_drop) 
+        seq = F.dropout(seq, in_drop)                               # shape (batch_size, max_length, input_dimension)
 
-    seq_fts = nn.Conv1d(seq.size(1), out_sz, 1, bias=False)(seq) # batch size x
+    print(f'seq shape: {seq.shape}')
+    seq_fts = nn.Conv1d(seq.size(1), out_sz, 1, bias=False)(seq)    # shape (batch_size, out_sz, input_dimension) where out_sz = hidden_dim
 
-    f_1 = nn.Conv1d(out_sz, 1, 1)(seq_fts)
-    f_2 = nn.Conv1d(out_sz, 1, 1)(seq_fts)
-    logits = f_1 + f_2.permute(0, 2, 1)
-    coefs = F.softmax(F.leaky_relu(logits), dim=-1)
+    print(f'seq_fts shape: {seq_fts.shape}')
+
+    f_1 = nn.Conv1d(out_sz, 1, 1)(seq_fts)                          # shape (batch_size, 1, input_dimension)   
+    f_2 = nn.Conv1d(out_sz, 1, 1)(seq_fts)                          # shape (batch_size, 1, input_dimension)
+    logits = f_1 + f_2.permute(0, 2, 1)                             # shape (batch_size, input_dimension, input_dimension)
+    coefs = F.softmax(F.leaky_relu(logits), dim=-1)                 # shape (batch_size, input_dimension, input_dimension)
 
     if coef_drop != 0.0:
         coefs = F.dropout(coefs, coef_drop)
     if in_drop != 0.0:
-        seq_fts = F.dropout(seq_fts, in_drop)
+        seq_fts = F.dropout(seq_fts, in_drop)                       # shape (batch_size, out_sz, input_dimension)
+
+    print(f'coefs shape: {coefs.shape}')
+    print(f'seq_fts shape: {seq_fts.shape}')
 
     vals = torch.bmm(coefs, seq_fts)
     ret = vals + seq_fts
