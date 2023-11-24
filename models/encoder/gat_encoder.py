@@ -4,9 +4,9 @@ import torch.nn.functional as F
 
 def attn_head(seq, out_sz, activation, in_drop=0.0, coef_drop=0.0, residual=False):
     if in_drop != 0.0:
-        seq = F.dropout(seq, in_drop)
+        seq = F.dropout(seq, in_drop) 
 
-    seq_fts = nn.Conv1d(seq.size(1), out_sz, 1, bias=False)(seq)
+    seq_fts = nn.Conv1d(seq.size(1), out_sz, 1, bias=False)(seq) # batch size x
 
     f_1 = nn.Conv1d(out_sz, 1, 1)(seq_fts)
     f_2 = nn.Conv1d(out_sz, 1, 1)(seq_fts)
@@ -43,6 +43,10 @@ class GATEncoder(nn.Module):
         self.is_training = is_train
 
     def encode(self, inputs):
+        """
+        input shape: (batch_size, max_length, input_dimension)
+        output shape: (batch_size, max_length, input_embed)
+        """
         x = inputs
         for _ in range(self.num_stacks):
             heads = []
