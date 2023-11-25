@@ -8,11 +8,11 @@ config, _ = get_config()
 config.batch_size = 10
 config.max_length = 5
 config.input_dimension = 32
-config.num_stacks = 1
-config.num_heads = 1
+config.num_stacks = 2
+config.num_heads = 5
 config.hidden_dim = 20
 
 gat_encoder = GATEncoder(config, True)
 input_ = torch.zeros((config.batch_size, config.max_length, config.input_dimension))
 output = gat_encoder.encode(input_)
-print(output)
+print(output.shape)
