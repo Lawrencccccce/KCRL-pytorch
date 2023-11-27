@@ -50,7 +50,7 @@ class SingleLayerDecoder(object):
         else:
             raise NotImplementedError('Current decoder activation is not implemented yet')
 
-        logits = torch.einsum('ijkl, l->ijk', final_sum, U)
+        logits = torch.einsum('ijkl, l->ijk', final_sum, U)                         # shape (batch_size, max_length, max_length)
 
         if self.bias_initial_value is None:
             self.logit_bias = nn.Parameter(torch.randn(1))
@@ -71,10 +71,10 @@ class SingleLayerDecoder(object):
             masked_score = self.adj_prob[:, i, :] - 100000000. * self.mask
             prob = torch.distributions.Bernoulli(logits=masked_score)
 
-            sampled_arr = prob.sample()
+            sampled_arr = prob.sample()                                         # shape (batch_size, max_length)
 
-            self.samples.append(sampled_arr)
-            self.mask_scores.append(masked_score)
-            self.entropy.append(prob.entropy())
+            self.samples.append(sampled_arr)                                    # shape (max_length, batch_size, max_length)
+            self.mask_scores.append(masked_score)                               # shape (max_length, batch_size, max_length)
+            self.entropy.append(prob.entropy())                                 # shape (max_length, batch_size, max_length)
 
         return self.samples, self.mask_scores, self.entropy

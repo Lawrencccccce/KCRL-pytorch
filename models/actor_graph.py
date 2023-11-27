@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.functional as F
 from .encoder import GATEncoder
 from .decoder import SingleLayerDecoder
+from critic import Critic
 
 
 
@@ -56,7 +57,7 @@ class Actor(nn.Module):
 
 
         self.build_permutation()
-        #self.build_critic()
+        self.build_critic()
         #self.build_reward()
         #self.build_optim()
         #self.merged = tf.summary.merge_all()
@@ -91,15 +92,21 @@ class Actor(nn.Module):
         self.samples, self.scores, self.entropy = self.decoder.decode(self.encoder_output)
 
 
-        graphs_gen = torch.stack(self.samples).permute(1, 0, 2)
+        graphs_gen = torch.stack(self.samples).permute(1, 0, 2)                         # shape (batch_size, max_length, max_length)
 
         self.graphs = graphs_gen
-        self.graph_batch = torch.mean(graphs_gen, axis=0)
-        logits_for_rewards = torch.stack(self.scores)
-        entropy_for_rewards = torch.stack(self.entropy)
-        entropy_for_rewards = entropy_for_rewards.permute(1, 0, 2)
-        logits_for_rewards = logits_for_rewards.permute(1, 0, 2)
+        # average the graphs_gen over all batches
+        self.graph_batch = torch.mean(graphs_gen, axis=0)                               # shape (max_length, max_length)
+        logits_for_rewards = torch.stack(self.scores).permute(1, 0, 2)                  # shape (batch_size, max_length, max_length)
+        entropy_for_rewards = torch.stack(self.entropy).permute(1, 0, 2)                # shape (batch_size, max_length, max_length)    
+        # why only the first two?
         self.test_scores = torch.sigmoid(logits_for_rewards)[:2]
         log_probss = F.binary_cross_entropy_with_logits(logits_for_rewards, self.graphs_, reduction='none')
         self.log_softmax = torch.mean(log_probss, axis=[1, 2])
         self.entropy_regularization = torch.mean(entropy_for_rewards, axis=[1,2])
+
+
+    def build_critic(self):
+        # Critic predicts reward (parametric baseline for REINFORCE)
+        self.critic = Critic(self.config, self.is_train)
+        self.critic.predict_rewards(self.encoder_output)
