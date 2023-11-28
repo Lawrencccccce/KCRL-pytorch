@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.functional as F
+import torch.optim as optim
 from .encoder import GATEncoder
 from .decoder import SingleLayerDecoder
 from critic import Critic
@@ -58,8 +59,8 @@ class Actor(nn.Module):
 
         self.build_permutation()
         self.build_critic()
-        #self.build_reward()
-        #self.build_optim()
+        self.build_reward()
+        self.build_optim()
         #self.merged = tf.summary.merge_all()
 
 
@@ -110,3 +111,51 @@ class Actor(nn.Module):
         # Critic predicts reward (parametric baseline for REINFORCE)
         self.critic = Critic(self.config, self.is_train)
         self.critic.predict_rewards(self.encoder_output)
+
+    def build_reward(self):
+        # PyTorch doesn't have a direct equivalent of tf.name_scope
+        # But you can achieve similar functionality using Python's context managers
+        self.reward = self.reward_
+        # PyTorch doesn't have a direct equivalent of tf.summary
+        # You can use TensorBoardX, a third-party library, to log values for viewing in TensorBoard
+        # from tensorboardX import SummaryWriter
+        # writer = SummaryWriter()
+        # writer.add_scalar('reward', self.reward)
+
+    def build_optim(self):
+        # PyTorch doesn't have a direct equivalent of tf.control_dependencies
+        # But you can achieve similar functionality using Python's context managers
+
+        # Update baseline
+        reward_mean = torch.mean(self.reward)
+        self.reward_batch = reward_mean
+        self.avg_baseline = self.alpha * self.avg_baseline + (1.0 - self.alpha) * reward_mean
+
+        # Actor learning rate
+        self.lr1 = self.lr1_start * (self.lr1_decay_rate ** (self.global_step / self.lr1_decay_step))
+        # Optimizer
+        self.opt1 = optim.Adam(self.parameters(), lr=self.lr1, betas=(0.9, 0.99), eps=1e-7)
+        # Discounted reward
+        self.reward_baseline = self.reward - self.avg_baseline - self.critic.predictions
+        # Loss
+        self.loss1 = torch.mean(self.reward_baseline * self.log_softmax) - 1 * self.lr1 * torch.mean(self.entropy_regularization)
+        # Minimize step
+        self.opt1.zero_grad()
+        self.loss1.backward()
+        torch.nn.utils.clip_grad_norm_(self.parameters(), 1)
+        self.opt1.step()
+        self.global_step += 1
+
+        # Critic learning rate
+        self.lr2 = self.lr2_start * (self.lr2_decay_rate ** (self.global_step2 / self.lr2_decay_step))
+        # Optimizer
+        self.opt2 = optim.Adam(self.parameters(), lr=self.lr2, betas=(0.9, 0.99), eps=1e-7)
+        # Loss
+        weights_ = 1.0
+        self.loss2 = torch.mean((self.reward - self.avg_baseline - self.critic.predictions) ** 2)
+        # Minimize step
+        self.opt2.zero_grad()
+        self.loss2.backward()
+        torch.nn.utils.clip_grad_norm_(self.parameters(), 1)
+        self.opt2.step()
+        self.global_step2 += 1
