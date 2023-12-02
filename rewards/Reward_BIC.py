@@ -18,7 +18,7 @@ class get_Reward(object):
         self.dim = dim
         self.baseint = 2**maxlen
         self.d = {} # store results
-        self.d_RSS = {} # store RSS for reuse
+        self.d_RSS = {} # store RSS for reuse, residual sum of squares
         self.inputdata = inputdata
         self.n_samples = inputdata.shape[0]
         self.l1_graph_reg = l1_graph_reg 
@@ -88,6 +88,7 @@ class get_Reward(object):
 
         penalty = 0
 
+        # calculate penalty
         for i in range(self.maxlen):
             for j in range(self.maxlen):
                 if tgraph[i][j] == 0 or tgraph[i][j] == 1:
@@ -97,6 +98,10 @@ class get_Reward(object):
         for i in range(self.maxlen):
             graph_batch[i][i] = 0
             tt = np.int32(graph_batch[i])
+
+            # wirte each row of the adjacency matrix as a binary number
+            # then convert the binary number to integer
+            # the baseint = 2**maxlen which is the maximum value of the integer
             graph_to_int.append(self.baseint * i + np.int(''.join([str(ad) for ad in tt]), 2))
             graph_to_int2.append(np.int(''.join([str(ad) for ad in tt]), 2))
 
