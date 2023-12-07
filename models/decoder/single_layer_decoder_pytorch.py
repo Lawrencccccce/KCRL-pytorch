@@ -5,6 +5,11 @@ import torch.nn.functional as F
 
 class SingleLayerDecoder(object):
 
+    '''
+        input: encoder_output (batch_size, max_length, input_embed)
+        output: samples (max_length, batch_size, max_length)
+    '''
+
     def __init__(self, config, is_train):
         super(SingleLayerDecoder, self).__init__()
         self.batch_size = config.batch_size    # batch size

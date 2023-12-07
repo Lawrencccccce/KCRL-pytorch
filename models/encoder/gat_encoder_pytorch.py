@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-import torch.functional as F
+import torch.nn.functional as F
 
 
 
@@ -40,7 +40,7 @@ class GATEncoder(nn.Module):
         return x
     
 
-    def attn_head(seq, out_sz, activation, in_drop=0.0, coef_drop=0.0, residual=False):
+    def attn_head(self, seq, out_sz, activation, in_drop=0.0, coef_drop=0.0, residual=False):
         '''
         input shape: (batch_size, max_length, input_dimension)
         output shape: (batch_size, max_length, out_sz)

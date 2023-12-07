@@ -1,3 +1,3 @@
 
-from .single_layer_decoder import SingleLayerDecoder
+from .single_layer_decoder_pytorch import SingleLayerDecoder
 from .bilinear_decoder import BilinearDecoder

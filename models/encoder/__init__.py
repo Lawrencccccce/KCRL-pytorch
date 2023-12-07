@@ -1,2 +1,2 @@
 from .transformer_encoder import TransformerEncoder
-from .gat_encoder import GATEncoder
+from .gat_encoder_pytorch import GATEncoder
