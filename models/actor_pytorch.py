@@ -1,13 +1,17 @@
 import torch
 import torch.nn as nn
-import torch.functional as F
-import torch.optim as optim
 
 from .encoder import GATEncoder
 from .decoder import SingleLayerDecoder
 
 
 class Actor(nn.Module):
+    '''
+        input: inputs (batch_size, max_length, num_random_sample)
+        output: samples (batch_size, max_length, max_length)
+    '''
+
+
     def __init__(self, config):
         super(Actor, self).__init__()
         self.config = config
@@ -15,7 +19,7 @@ class Actor(nn.Module):
         # Data config
         self.batch_size = config.batch_size                     # batch size
         self.max_length = config.max_length                     # this is the number of nodes in the graph  
-        self.input_dimension = config.input_dimension           # input dimension  
+        self.num_random_sample = config.num_random_sample           # input dimension  
 
         # Reward config
         # self.avg_baseline = nn.Parameter(torch.Tensor([config.init_baseline]), requires_grad=False)
@@ -36,15 +40,15 @@ class Actor(nn.Module):
         # self.lr2_decay_step = config.lr1_decay_step  # learning rate decay step
 
         # Tensor block holding the input sequences [Batch Size, Sequence Length, Features]
-        self.input_ = torch.zeros((self.batch_size, self.max_length, self.input_dimension))
+        self.input_ = torch.zeros((self.batch_size, self.max_length, self.num_random_sample))
         self.reward_ = torch.zeros(self.batch_size)
         self.graphs_ = torch.zeros((self.batch_size, self.max_length, self.max_length))
 
     def forward(self, inputs):
         """
-        input shape: (batch_size, max_length, input_dimension)
-        output shape: (batch_size, max_length, input_embed) 
+            input shape: (batch_size, max_length, num_random_sample)
+            output shape: (batch_size, max_length, max_length)
         """
         encoder_output = self.encoder.forward(inputs)
-        decoder_output = self.decoder.forward(encoder_output)
-        return decoder_output
+        samples, mask_scores, entropy = self.decoder.forward(encoder_output)
+        return torch.transpose(torch.stack(samples), 0, 1), mask_scores, entropy

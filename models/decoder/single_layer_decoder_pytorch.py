@@ -24,10 +24,7 @@ class SingleLayerDecoder(object):
 
         self.is_training = is_train
 
-        self.samples = []
-        self.mask = 0
-        self.mask_scores = []
-        self.entropy = []
+        
 
 
 
@@ -36,6 +33,11 @@ class SingleLayerDecoder(object):
         '''
             encoder_output is a tensor of size [batch_size, max_length, input_embed]
         '''
+        self.samples = []
+        self.mask = 0
+        self.mask_scores = []
+        self.entropy = []
+
         W_l = nn.Parameter(torch.randn(self.input_embed, self.decoder_hidden_dim))
         W_r = nn.Parameter(torch.randn(self.input_embed, self.decoder_hidden_dim))
         U = nn.Parameter(torch.randn(self.decoder_hidden_dim))

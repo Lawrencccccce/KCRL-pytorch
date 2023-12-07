@@ -8,10 +8,11 @@ from helpers.dir_utils import create_dir
 
 
 class CustomDataset(Dataset):
-    def __init__(self, input_path, transform=None, solution_path = None, normalize_flag=False, transpose_flag=False):
+    def __init__(self, input_path, num_random_sample = 64, transform=None, solution_path = None, normalize_flag=False, transpose_flag=False):
         self.data = np.load(input_path).astype(int)
         self.transform = transform
         self.datasize, self.d = self.data.shape
+        self.num_random_sample = num_random_sample
 
         # data_dir = 'dataset/{}'.format(datetime.now(timezone('Australia/Sydney')).strftime('%Y-%m-%d_%H-%M-%S-%f')[:-3])
         # create_dir(data_dir)
@@ -29,12 +30,12 @@ class CustomDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, idx):
-        sample = {'data': self.data[idx]}
-
-        if self.transform:
-            sample = self.transform(sample)
-
-        return sample
+        # we random sample data from the dataset
+        # return data in the shape of (number of nodes, number of samples)
+        seq = np.random.randint(self.datasize, size=(self.num_random_sample))
+        input_ = self.data[seq]
+        
+        return input_.T
     
     def get_number_of_nodes(self):
         return self.d
