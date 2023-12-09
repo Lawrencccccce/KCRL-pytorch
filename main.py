@@ -1,7 +1,7 @@
 from torch.utils.data import DataLoader
 from dataloader.dataset import CustomDataset
 from helpers.config import get_config
-from models import Actor
+from models import Actor, Critic
 
 
 def initialise_config_and_dataset():
@@ -55,13 +55,18 @@ def main():
     num_workers = 4
 
     actor = Actor(config)
+    critic = Critic(config)
     data_loader = DataLoader(dataset=mydataset, batch_size=config.batch_size, shuffle=shuffle, num_workers=num_workers)
     for batch in data_loader:
         # print(batch)
         batch = batch.float()
         output = actor.forward(batch)
+        encoder_output = output[0]
+        decoder_samples = output[1]
+        predicted_reward = critic.forward(encoder_output)
 
-        print(output[0].shape)
+        print(decoder_samples.shape)
+        print(predicted_reward)
         break
 
 

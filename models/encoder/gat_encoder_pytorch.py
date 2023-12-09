@@ -8,7 +8,7 @@ class GATEncoder(nn.Module):
 
     '''
         input shape: (batch_size, max_length, num_random_sample)
-        output shape: (batch_size, max_length, input_embed)
+        output shape: (batch_size, max_length, hidden_dim)
     '''
     def __init__(self, config, is_train):
         super(GATEncoder, self).__init__()
@@ -27,8 +27,8 @@ class GATEncoder(nn.Module):
 
     def forward(self, inputs):
         """
-        input shape: (batch_size, max_length, num_random_sample)
-        output shape: (batch_size, max_length, input_embed) 
+        input shape: (batch_size, max_length, num_random_sample) d by n
+        output shape: (batch_size, max_length, hidden_dim)      
         """
 
         # hidden_dim must be divided by the num_heads

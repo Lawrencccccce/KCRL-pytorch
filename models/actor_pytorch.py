@@ -51,4 +51,4 @@ class Actor(nn.Module):
         """
         encoder_output = self.encoder.forward(inputs)
         samples, mask_scores, entropy = self.decoder.forward(encoder_output)
-        return torch.transpose(torch.stack(samples), 0, 1), mask_scores, entropy
+        return encoder_output, torch.transpose(torch.stack(samples), 0, 1), mask_scores, entropy
