@@ -19,7 +19,7 @@ class Actor(nn.Module):
         # Data config
         self.batch_size = config.batch_size                         # batch size
         self.max_length = config.max_length                         # this is the number of nodes in the graph  
-        self.num_random_sample = config.num_random_sample           # input dimension  
+        self.num_random_sample = config.num_random_sample           # input dimension 
 
         # Reward config
         # self.avg_baseline = nn.Parameter(torch.Tensor([config.init_baseline]), requires_grad=False)
