@@ -5,6 +5,7 @@ from scipy.spatial.distance import pdist, squareform
 from sklearn.gaussian_process import GaussianProcessRegressor as GPR
 from sklearn.preprocessing import PolynomialFeatures
 import logging
+import torch
 
 
 class get_Reward(object):
@@ -80,6 +81,7 @@ class get_Reward(object):
         return y_train.reshape(-1,1) - gpr.predict(X_train/med_w).reshape(-1,1)
 
     def calculate_reward_single_graph(self, graph_batch, tgraph, lambda1, lambda2, lambda3):
+        graph_batch = graph_batch.numpy()
         graph_to_int = []
         graph_to_int2 = []
 
@@ -102,8 +104,8 @@ class get_Reward(object):
             # wirte each row of the adjacency matrix as a binary number
             # then convert the binary number to integer
             # the baseint = 2**maxlen which is the maximum value of the integer
-            graph_to_int.append(self.baseint * i + np.int(''.join([str(ad) for ad in tt]), 2))
-            graph_to_int2.append(np.int(''.join([str(ad) for ad in tt]), 2))
+            graph_to_int.append(self.baseint * i + int(''.join([str(ad) for ad in tt]), 2))
+            graph_to_int2.append(int(''.join([str(ad) for ad in tt]), 2))
 
         graph_batch_to_tuple = tuple(graph_to_int2)
 
@@ -149,7 +151,7 @@ class get_Reward(object):
 
         score = self.score_transform(BIC)
         cycness = np.trace(matrix_exponential(np.array(graph_batch)))- self.maxlen
-        reward = score + lambda1*np.float(cycness>1e-5) + lambda2*cycness + lambda3*penalty
+        reward = score + lambda1 * float(cycness>1e-5) + lambda2*cycness + lambda3*penalty
             
         if self.l1_graph_reg > 0:
             reward = reward + self.l1_grapha_reg * np.sum(graph_batch)
@@ -170,7 +172,7 @@ class get_Reward(object):
 
     def penalized_score(self, score_cyc, lambda1, lambda2, lambda3):
         score, cyc, penalty = score_cyc
-        return score + lambda1*np.float(cyc>1e-5) + lambda2*cyc + lambda3*penalty
+        return score + lambda1 * float(cyc>1e-5) + lambda2*cyc + lambda3*penalty
     
     def update_scores(self, score_cycs, lambda1, lambda2, lambda3):
         ls = []

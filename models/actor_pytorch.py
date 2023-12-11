@@ -17,8 +17,8 @@ class Actor(nn.Module):
         self.config = config
         self.is_train = True
         # Data config
-        self.batch_size = config.batch_size                     # batch size
-        self.max_length = config.max_length                     # this is the number of nodes in the graph  
+        self.batch_size = config.batch_size                         # batch size
+        self.max_length = config.max_length                         # this is the number of nodes in the graph  
         self.num_random_sample = config.num_random_sample           # input dimension  
 
         # Reward config

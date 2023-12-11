@@ -19,12 +19,13 @@ class CustomDataset(Dataset):
 
 
         if solution_path is None:
-            true_graph = np.zeros(self.d)
+            # true_graph = np.zeros(self.d)
+            self.true_graph = None
         else:
             true_graph = np.load(solution_path)#DAG.npy
             if transpose_flag: 
                 true_graph = np.transpose(true_graph)#Transposing the true DAG
-        self.true_graph = np.int32(np.abs(true_graph) > 1e-3)
+            self.true_graph = np.int32(np.abs(true_graph) > 1e-3)
 
     def __len__(self):
         return len(self.data)
@@ -42,3 +43,9 @@ class CustomDataset(Dataset):
     
     def get_datasize(self):
         return self.datasize
+    
+    def get_data(self):
+        return self.data
+    
+    def get_true_graph(self):
+        return self.true_graph
