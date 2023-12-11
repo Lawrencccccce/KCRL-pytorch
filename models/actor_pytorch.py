@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 from .encoder import GATEncoder
 from .decoder import SingleLayerDecoder
@@ -51,4 +52,12 @@ class Actor(nn.Module):
         """
         encoder_output = self.encoder.forward(inputs)
         samples, mask_scores, entropy = self.decoder.forward(encoder_output)
-        return encoder_output, torch.transpose(torch.stack(samples), 0, 1), mask_scores, entropy
+        graph_gen = torch.transpose(torch.stack(samples), 0, 1)
+        logits_for_rewards = torch.stack(mask_scores).permute(1, 0, 2)
+        entropy_for_rewards = torch.stack(entropy).permute(1, 0, 2)
+
+        test_scores = torch.sigmoid(logits_for_rewards)[:2]
+        log_probss = F.binary_cross_entropy_with_logits(logits_for_rewards, graph_gen, reduction='none')
+        log_softmax = torch.mean(log_probss, axis=[1, 2])
+        entropy_regularization = torch.mean(entropy_for_rewards, axis=[1,2])
+        return encoder_output, graph_gen, log_softmax, entropy_regularization

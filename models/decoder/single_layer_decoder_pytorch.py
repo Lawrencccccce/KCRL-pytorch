@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class SingleLayerDecoder(object):
+class SingleLayerDecoder(nn.Module):
 
     '''
         input: encoder_output (batch_size, max_length, input_embed)
