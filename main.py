@@ -303,77 +303,79 @@ def main():
             ax.imshow(mydataset.get_true_graph(), cmap=plt.cm.gray)
             plt.savefig('{}/recovered_graph_iteration_{}.png'.format(config.plot_dir, image_count))
             plt.close()
-                    
-            # update lambda1, lamda2, lamda3
-            if (i+1) % lambda_iter_num == 0:
-                ls_kv = callreward.update_all_scores(lambda1, lambda2, lambda3)
-                # np.save('{}/solvd_dict_epoch_{}.npy'.format(config.graph_dir, i), np.array(ls_kv))
-                max_rewards_re = callreward.update_scores(max_rewards, lambda1, lambda2, lambda3)
-                rewards_batches_re = callreward.update_scores(rewards_batches, lambda1, lambda2, lambda3)
-                reward_max_per_batch_re = callreward.update_scores(reward_max_per_batch, lambda1, lambda2, lambda3)
 
-                # saved somewhat more detailed logging info
-                np.save('{}/solvd_dict.npy'.format(config.graph_dir), np.array(ls_kv))
-                pd.DataFrame(np.array(max_rewards_re)).to_csv('{}/max_rewards.csv'.format(output_dir))
-                pd.DataFrame(rewards_batches_re).to_csv('{}/rewards_batch.csv'.format(output_dir))
-                pd.DataFrame(reward_max_per_batch_re).to_csv('{}/reward_max_batch.csv'.format(output_dir))
-                pd.DataFrame(lambda1s).to_csv('{}/lambda1s.csv'.format(output_dir))
-                pd.DataFrame(lambda2s).to_csv('{}/lambda2s.csv'.format(output_dir))
-                pd.DataFrame(lambda3s).to_csv('{}/lambda3s.csv'.format(output_dir))
-                    
-                graph_int, score_min, cyc_min = np.int32(ls_kv[0][0]), ls_kv[0][1][1], ls_kv[0][1][-1]
 
-                if cyc_min < 1e-5:
-                    lambda1_upper = score_min
-                lambda1 = min(lambda1+lambda1_update_add, lambda1_upper)
-                lambda2 = min(lambda2*lambda2_update_mul, lambda2_upper)
-                lambda3 = min(lambda3+lambda3_update_add, lambda3_upper)
-                # _logger.info('[iter {}] lambda1 {}, upper {}, lambda2 {}, upper {}, score_min {}, cyc_min {}'.format(i+1,
-                #             lambda1, lambda1_upper, lambda2, lambda2_upper, score_min, cyc_min))
-                    
-                graph_batch = convert_graph_int_to_adj_mat(graph_int)
 
-                if config.reg_type == 'LR':
-                    graph_batch_pruned = np.array(graph_prunned_by_coef(graph_batch, mydataset.get_data()))
-                elif config.reg_type == 'QR':
-                    graph_batch_pruned = np.array(graph_prunned_by_coef_2nd(graph_batch, mydataset.get_data()))
-                elif config.reg_type == 'GPR':
-                    # The R codes of CAM pruning operates the graph form that (i,j)=1 indicates i-th node-> j-th node
-                    # so we need to do a tranpose on the input graph and another tranpose on the output graph
-                    #graph_batch_pruned = np.array(graph_prunned_by_coef_2nd(graph_batch, training_set.inputdata))
-                    pass
-                    # graph_batch_pruned = np.transpose(pruning_cam(mydataset.get_data(), np.array(graph_batch).T))
+        # update lambda1, lamda2, lamda3
+        if (i+1) % lambda_iter_num == 0:
+            ls_kv = callreward.update_all_scores(lambda1, lambda2, lambda3)
+            # np.save('{}/solvd_dict_epoch_{}.npy'.format(config.graph_dir, i), np.array(ls_kv))
+            max_rewards_re = callreward.update_scores(max_rewards, lambda1, lambda2, lambda3)
+            rewards_batches_re = callreward.update_scores(rewards_batches, lambda1, lambda2, lambda3)
+            reward_max_per_batch_re = callreward.update_scores(reward_max_per_batch, lambda1, lambda2, lambda3)
+
+            # saved somewhat more detailed logging info
+            # np.save('{}/solvd_dict.npy'.format(config.graph_dir), np.array(ls_kv))
+            pd.DataFrame(np.array(max_rewards_re)).to_csv('{}/max_rewards.csv'.format(output_dir))
+            pd.DataFrame(rewards_batches_re).to_csv('{}/rewards_batch.csv'.format(output_dir))
+            pd.DataFrame(reward_max_per_batch_re).to_csv('{}/reward_max_batch.csv'.format(output_dir))
+            pd.DataFrame(lambda1s).to_csv('{}/lambda1s.csv'.format(output_dir))
+            pd.DataFrame(lambda2s).to_csv('{}/lambda2s.csv'.format(output_dir))
+            pd.DataFrame(lambda3s).to_csv('{}/lambda3s.csv'.format(output_dir))
                 
-                image_count2 += 1
+            graph_int, score_min, cyc_min = np.int32(ls_kv[0][0]), ls_kv[0][1][1], ls_kv[0][1][-1]
 
-                fig = plt.figure(3)
-                fig.suptitle('Iteration: {}'.format(i))
-                ax = fig.add_subplot(1, 2, 1)
-                ax.set_title('est_graph')
-                ax.imshow(np.around(graph_batch_pruned.T).astype(int),cmap=plt.cm.binary)
-                ax = fig.add_subplot(1, 2, 2)
-                ax.set_title('true_graph')
-                ax.imshow(mydataset.get_true_graph(), cmap=plt.cm.binary)
-                plt.savefig('{}/estimated_graph_{}.png'.format(config.plot_dir, image_count2))
-                plt.close()
-
-                # estimate accuracy
-                acc_est = count_accuracy(mydataset.get_true_graph(), graph_batch.T)
-                acc_est2 = count_accuracy(mydataset.get_true_graph(), graph_batch_pruned.T)
-
-                fdr, tpr, fpr, shd, nnz = acc_est['fdr'], acc_est['tpr'], acc_est['fpr'], acc_est['shd'], \
-                                          acc_est['pred_size']
-                fdr2, tpr2, fpr2, shd2, nnz2 = acc_est2['fdr'], acc_est2['tpr'], acc_est2['fpr'], acc_est2['shd'], \
-                                               acc_est2['pred_size']
-                    
-                accuracy_res.append((fdr, tpr, fpr, shd, nnz))
-                accuracy_res_pruned.append((fdr2, tpr2, fpr2, shd2, nnz2))
+            if cyc_min < 1e-5:
+                lambda1_upper = score_min
+            lambda1 = min(lambda1+lambda1_update_add, lambda1_upper)
+            lambda2 = min(lambda2*lambda2_update_mul, lambda2_upper)
+            lambda3 = min(lambda3+lambda3_update_add, lambda3_upper)
+            # _logger.info('[iter {}] lambda1 {}, upper {}, lambda2 {}, upper {}, score_min {}, cyc_min {}'.format(i+1,
+            #             lambda1, lambda1_upper, lambda2, lambda2_upper, score_min, cyc_min))
                 
-                np.save('{}/accuracy_res.npy'.format(output_dir), np.array(accuracy_res))
-                np.save('{}/accuracy_res2.npy'.format(output_dir), np.array(accuracy_res_pruned))
-                    
-                _logger.info('before pruning: fdr {}, tpr {}, fpr {}, shd {}, nnz {}'.format(fdr, tpr, fpr, shd, nnz))
-                _logger.info('after  pruning: fdr {}, tpr {}, fpr {}, shd {}, nnz {}'.format(fdr2, tpr2, fpr2, shd2, nnz2))
+            graph_batch = convert_graph_int_to_adj_mat(graph_int)
+
+            if config.reg_type == 'LR':
+                graph_batch_pruned = np.array(graph_prunned_by_coef(graph_batch, mydataset.get_data()))
+            elif config.reg_type == 'QR':
+                graph_batch_pruned = np.array(graph_prunned_by_coef_2nd(graph_batch, mydataset.get_data()))
+            elif config.reg_type == 'GPR':
+                # The R codes of CAM pruning operates the graph form that (i,j)=1 indicates i-th node-> j-th node
+                # so we need to do a tranpose on the input graph and another tranpose on the output graph
+                #graph_batch_pruned = np.array(graph_prunned_by_coef_2nd(graph_batch, training_set.inputdata))
+                pass
+                # graph_batch_pruned = np.transpose(pruning_cam(mydataset.get_data(), np.array(graph_batch).T))
+            
+            image_count2 += 1
+
+            fig = plt.figure(3)
+            fig.suptitle('Iteration: {}'.format(i))
+            ax = fig.add_subplot(1, 2, 1)
+            ax.set_title('est_graph')
+            ax.imshow(np.around(graph_batch_pruned.T).astype(int),cmap=plt.cm.binary)
+            ax = fig.add_subplot(1, 2, 2)
+            ax.set_title('true_graph')
+            ax.imshow(mydataset.get_true_graph(), cmap=plt.cm.binary)
+            plt.savefig('{}/estimated_graph_{}.png'.format(config.plot_dir, image_count2))
+            plt.close()
+
+            # estimate accuracy
+            acc_est = count_accuracy(mydataset.get_true_graph(), graph_batch.T)
+            acc_est2 = count_accuracy(mydataset.get_true_graph(), graph_batch_pruned.T)
+
+            fdr, tpr, fpr, shd, nnz = acc_est['fdr'], acc_est['tpr'], acc_est['fpr'], acc_est['shd'], \
+                                        acc_est['pred_size']
+            fdr2, tpr2, fpr2, shd2, nnz2 = acc_est2['fdr'], acc_est2['tpr'], acc_est2['fpr'], acc_est2['shd'], \
+                                            acc_est2['pred_size']
+                
+            accuracy_res.append((fdr, tpr, fpr, shd, nnz))
+            accuracy_res_pruned.append((fdr2, tpr2, fpr2, shd2, nnz2))
+            
+            np.save('{}/accuracy_res.npy'.format(output_dir), np.array(accuracy_res))
+            np.save('{}/accuracy_res2.npy'.format(output_dir), np.array(accuracy_res_pruned))
+                
+            _logger.info('before pruning: fdr {}, tpr {}, fpr {}, shd {}, nnz {}'.format(fdr, tpr, fpr, shd, nnz))
+            _logger.info('after  pruning: fdr {}, tpr {}, fpr {}, shd {}, nnz {}'.format(fdr2, tpr2, fpr2, shd2, nnz2))
 
             # Save the variables to disk
             # if i % max(1, int(config.nb_epoch / 5)) == 0 and i != 0:
