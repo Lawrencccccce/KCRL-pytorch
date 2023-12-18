@@ -1,0 +1,5 @@
+2023-12-16 14:40:50,478 INFO - helpers.log_helper - Completed configuring logger.
+2023-12-16 14:40:50,479 INFO - __main__ - Python version is 3.11.6
+2023-12-16 14:40:50,479 INFO - __main__ - Current commit of code: ___
+2023-12-16 14:40:50,527 INFO - __main__ - Original sl: 0.561383150838881, su: 0.8891994588967228, strue: 0.7167858618828377
+2023-12-16 14:40:50,527 INFO - __main__ - Transfomed sl: 0.561383150838881, su: 0.8891994588967228, lambda2: 0.0001, true: 2.3702712040875116
