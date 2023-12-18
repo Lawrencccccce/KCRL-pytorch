@@ -192,7 +192,6 @@ def main():
 
     prior_knowledge_g = get_prior_knowledge_graph(config.max_length)
 
-    data_iter = iter(data_loader)
     # Training loop
     for i in (range(1, config.nb_epoch + 1)):
         
@@ -202,9 +201,12 @@ def main():
         batch = batch.float()
         encoder_output, graph_predict, log_softmax, entropy_regularization = actor.forward(batch)
         predicted_reward = critic.forward(encoder_output)
+        # print(graph_predict[0])
+        # break
 
+        # reward_feed: (batch_size, [reward, score, cycness, penalty])
         reward_feed = torch.from_numpy(callreward.cal_rewards(graph_predict, prior_knowledge_g, lambda1, lambda2, lambda3))
-
+        
         # max reward, max reward per batch
         max_reward = -callreward.update_scores([max_reward_score_cyc], lambda1, lambda2, lambda3)[0]
         max_reward_batch = float('inf')
@@ -234,15 +236,16 @@ def main():
         lr1 = config.lr1_start * (config.lr1_decay_rate ** (global_step / config.lr1_decay_step))
         opt1 = optim.Adam(list(actor.encoder.parameters()) + list(actor.decoder.parameters()), lr=lr1.item(), betas=(0.9, 0.99), eps=1e-7)
         reward_baseline = -reward_feed[:,0] - avg_baseline - predicted_reward
-        loss1 = torch.mean(reward_baseline * log_softmax) - 1 * lr1 * torch.mean(entropy_regularization)
-        
-
+        # loss1 = torch.mean(reward_baseline * log_softmax) - 1 * lr1 * torch.mean(entropy_regularization)
+        loss1 = -reward_mean
+        print(loss1)
         # Critic update
         lr2 = config.lr2_start * (config.lr2_decay_rate ** (global_step2 / config.lr2_decay_step))
         opt2 = optim.Adam(critic.parameters(), lr=lr2.item(), betas=(0.9, 0.99), eps=1e-7)
         weights_ = 1.0
-        loss2 = torch.mean((-reward_feed[:,0] - avg_baseline - predicted_reward) ** 2)
-
+        # loss2 = torch.mean((-reward_feed[:,0] - avg_baseline - predicted_reward) ** 2)
+        loss2 = torch.mean((-reward_feed[:,0] - predicted_reward) ** 2)
+        # print(loss2)
 
         opt1.zero_grad()
         opt2.zero_grad()
@@ -279,7 +282,7 @@ def main():
                          reward_batch, max_reward, max_reward_batch))
             # other logger info; uncomment if you want to check
             # _logger.info('graph_batch_avg: {}'.format(graph_batch))
-            _logger.info('graph true: {}'.format(mydataset.get_true_graph()))
+            _logger.info('graph true:\n {}'.format(mydataset.get_true_graph()))
             # _logger.info('graph weights true: {}'.format(training_set.b))
             _logger.info('=====================================')
 

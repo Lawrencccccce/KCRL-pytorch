@@ -81,6 +81,14 @@ class get_Reward(object):
         return y_train.reshape(-1,1) - gpr.predict(X_train/med_w).reshape(-1,1)
 
     def calculate_reward_single_graph(self, graph_batch, tgraph, lambda1, lambda2, lambda3):
+        '''
+            Input:
+                graph_batch: (max_length, max_length)
+                tgraph:      (max_length, max_length)
+                lambda1:
+                lambda2:
+                lambda3:
+        '''
         graph_batch = graph_batch.numpy()
         graph_to_int = []
         graph_to_int2 = []
@@ -93,10 +101,12 @@ class get_Reward(object):
         # calculate penalty
         for i in range(self.maxlen):
             for j in range(self.maxlen):
-                if tgraph[i][j] == 0 or tgraph[i][j] == 1:
+                if tgraph[i][j] == 1:
                    if graph_batch[i][j] != tgraph[i][j]:
                        penalty = penalty + 1
 
+        # use binary to encode each graph and set it as a key
+        # in order to avoid repeatedly calculating the same graph
         for i in range(self.maxlen):
             graph_batch[i][i] = 0
             tt = np.int32(graph_batch[i])
@@ -160,8 +170,8 @@ class get_Reward(object):
 
         self.d[graph_batch_to_tuple] = (score, cycness, penalty)
 
-        if self.verbose:
-            self._logger.info('BIC: {}, cycness: {}, returned reward: {}'.format(BIC, cycness, final_score))
+        # if self.verbose:
+        #     self._logger.info('BIC: {}, cycness: {}, returned reward: {}'.format(BIC, cycness, final_score))
 
         return reward, score, cycness, penalty
 

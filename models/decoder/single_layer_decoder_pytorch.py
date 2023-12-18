@@ -38,9 +38,9 @@ class SingleLayerDecoder(nn.Module):
         self.mask_scores = []
         self.entropy = []
 
-        W_l = nn.Parameter(torch.randn(self.input_embed, self.decoder_hidden_dim))
-        W_r = nn.Parameter(torch.randn(self.input_embed, self.decoder_hidden_dim))
-        U = nn.Parameter(torch.randn(self.decoder_hidden_dim))
+        W_l = nn.Parameter(torch.randn(self.input_embed, self.decoder_hidden_dim))  # shape (input_embed, decoder_hidden_dim)
+        W_r = nn.Parameter(torch.randn(self.input_embed, self.decoder_hidden_dim))  # shape (input_embed, decoder_hidden_dim)
+        U = nn.Parameter(torch.randn(self.decoder_hidden_dim))                      # shape (decoder_hidden_dim)
 
         dot_l = torch.einsum('ijk, kl->ijl', encoder_output, W_l)                   # shape (batch_size, max_length, decoder_hidden_dim)
         dot_r = torch.einsum('ijk, kl->ijl', encoder_output, W_r)                   # shape (batch_size, max_length, decoder_hidden_dim)
@@ -66,8 +66,11 @@ class SingleLayerDecoder(nn.Module):
         else:
             self.logit_bias = nn.Parameter(torch.tensor([self.bias_initial_value], dtype=torch.float32))
 
-        self.adj_prob = logits
+        if self.use_bias:    # Bias to control sparsity/density
+            logits += self.logit_bias
 
+        # here should be a sigmoid function
+        self.adj_prob = torch.sigmoid(logits)                                                      # shape (batch_size, max_length, max_length)
 
         for i in range(self.max_length):
             position = torch.ones(encoder_output.shape[0], dtype=torch.int64) * i
@@ -75,7 +78,7 @@ class SingleLayerDecoder(nn.Module):
             # Update mask
             self.mask = F.one_hot(position, num_classes=self.max_length)
 
-            masked_score = self.adj_prob[:, i, :] - 100000000. * self.mask
+            masked_score = self.adj_prob[:, i, :] - 100000000. * self.mask      # shape (batch_size, max_length)
             prob = torch.distributions.Bernoulli(logits=masked_score)
 
             sampled_arr = prob.sample()                                         # shape (batch_size, max_length)

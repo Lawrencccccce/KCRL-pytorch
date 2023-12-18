@@ -48,11 +48,15 @@ class Actor(nn.Module):
     def forward(self, inputs):
         """
             input shape: (batch_size, max_length, num_random_sample)
-            output shape: (batch_size, max_length, max_length)
+            output:
+                graph_gen: (batch_size, max_length, max_length)  batch of adjacency matrices, each of which is a (0,1)-matrix
+                log_softmax: (batch_size, max_length, max_length)  batch of log softmax value for each element in the adjacency matrix
+                entropy_regularization: (batch_size, max_length, max_length)  batch of entropy regularization value for each element in the adjacency matrix
+                encoder_output: (batch_size, max_length, hidden_dim)  batch of hidden representations for each node in the graph
         """
         encoder_output = self.encoder.forward(inputs)
         samples, mask_scores, entropy = self.decoder.forward(encoder_output)
-        graph_gen = torch.transpose(torch.stack(samples), 0, 1)
+        graph_gen = torch.stack(samples).permute(1, 0, 2)
         logits_for_rewards = torch.stack(mask_scores).permute(1, 0, 2)
         entropy_for_rewards = torch.stack(entropy).permute(1, 0, 2)
 
